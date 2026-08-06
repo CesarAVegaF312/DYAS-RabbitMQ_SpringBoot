@@ -5,15 +5,15 @@ RabbitMQ es un popular sistema de mensajería basado en el protocolo AMQP (Advan
 
 Spring Boot es un marco de trabajo que facilita la creación de aplicaciones basadas en Spring, proporcionando una configuración predeterminada y simplificando el proceso de desarrollo. Integrar RabbitMQ con Spring Boot permite aprovechar las capacidades de mensajería de RabbitMQ de manera sencilla y efectiva dentro de una aplicación Spring.
 
-En este tutorial, aprenderás a configurar e integrar RabbitMQ en una aplicación Spring Boot. Crearemos un proyecto desde cero utilizando IntelliJ IDEA, configuraremos RabbitMQ, y desarrollaremos un ejemplo práctico de productor y consumidor de mensajes. Al finalizar este tutorial, tendrás una comprensión clara de cómo utilizar RabbitMQ en un entorno Spring Boot para manejar la mensajería asincrónica.
+En este tutorial, aprenderás a configurar e integrar RabbitMQ en una aplicación Spring Boot. Crearemos un proyecto desde cero con [Spring Initializr](https://start.spring.io) (funciona igual sin importar el IDE que uses), configuraremos RabbitMQ, y desarrollaremos un ejemplo práctico de productor y consumidor de mensajes. Al finalizar este tutorial, tendrás una comprensión clara de cómo utilizar RabbitMQ en un entorno Spring Boot para manejar la mensajería asincrónica.
 
 ## 2. Entorno
-Este tutorial se ha desarrollado en el siguiente entorno:
 
-- **Hardware**: portátil MacBook Pro (15′, mediados 2010).
-- **Sistema operativo**: Mac OS X Yosemite 10.10.5.
-- **IDE**: IntelliJ IDEA 14 Ultimate.
-- **Versión de Java**: 1.8.0_60
+Necesitas:
+
+- **JDK**: 8 o superior.
+- **Maven**.
+- Un **IDE** con soporte para proyectos Maven (NetBeans, IntelliJ IDEA, VS Code, Eclipse, etc. — este tutorial no depende de uno en particular).
 
 ## 3. Servidor de RabbitMQ
 Instalamos el servidor de RabbitMQ. Descárgalo desde [aquí](https://www.rabbitmq.com/download.html) o, si utilizas Mac, de [aquí](https://brew.sh/) o a través de Homebrew:
@@ -40,30 +40,24 @@ RabbitMQ x.y.z. Copyright (C) 2007-2015 Pivotal Software, Inc.
           Starting broker... completed with 10 plugins.
 ```
 
-## 4. Creación del Proyecto en IntelliJ IDEA
+## 4. Creación del Proyecto con Spring Initializr
 
-Lo primero que vamos a hacer es crear un proyecto Spring Boot. Spring Boot nos sirve para crear y ejecutar aplicaciones Spring de una manera más sencilla.
+Lo primero que vamos a hacer es crear un proyecto Spring Boot. La forma más simple y actual de hacerlo, sin importar el IDE que uses, es a través de [Spring Initializr](https://start.spring.io):
 
-En nuestro caso, empleamos IntelliJ IDEA como IDE. Seguimos los pasos mostrados en las capturas de pantalla:
+1. Entra a [https://start.spring.io](https://start.spring.io).
+2. Configura:
+   - **Project**: Maven
+   - **Language**: Java
+   - **Spring Boot**: la versión estable más reciente de la línea 2.7.x (o superior)
+   - **Group**: `tutoriales.rabbitmq.spring`
+   - **Artifact**: `tutorial-rabbitmq-spring`
+   - **Packaging**: Jar
+   - **Java**: 8 (o la que tengas instalada)
+3. En "Dependencies", agrega **Spring for RabbitMQ** (`spring-boot-starter-amqp`).
+4. Haz clic en "Generate" para descargar el `.zip`, descomprímelo, y ábrelo en tu IDE como un proyecto Maven existente (la mayoría de IDEs lo detectan automáticamente al abrir la carpeta o el `pom.xml`).
+5. Espera a que el IDE descargue las dependencias.
 
-![Crear Proyecto 1](images/rabbitmq_spring_crear_proyecto_1.png)
-![Crear Proyecto 2](images/rabbitmq_spring_crear_proyecto_2.png)
-![Crear Proyecto 3](images/rabbitmq_spring_crear_proyecto_3.png)
-![Crear Proyecto 4](images/rabbitmq_spring_crear_proyecto_4.png)
-
-Tras crear el proyecto nos saldrá un mensaje pidiendo que añadamos el pom.xml como proyecto Maven.
-
-![POM 1](images/rabbitmq_spring_pom_1.png)
-
-Este mensaje también lo podemos ver si hacemos clic en la parte inferior izquierda del IDE.
-
-![POM 2](images/rabbitmq_spring_pom_2.png)
-
-Lo añadimos y esperamos a que IntelliJ sincronice automáticamente las dependencias.
-
-En este momento ya tenemos una aplicación que se puede ejecutar (el método main usa SpringApplication.run para ejecutarla). Lo comprobamos haciendo clic derecho en el archivo TutorialRabbitmqSpringApplication.java y dándole a «Run / TutorialRabbitmqSpringApplication».
-
-![Ejecutar](images/rabbitmq_spring_ejecutar.png)
+En este momento ya tenemos una aplicación que se puede ejecutar (el método `main` usa `SpringApplication.run` para ejecutarla) — aunque todavía no hace nada interesante. La probamos ejecutando la clase `TutorialRabbitmqSpringApplication` (desde el IDE, con clic derecho → Run, o por consola con `mvn spring-boot:run`).
 
 ```xml
 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -81,7 +75,7 @@ En este momento ya tenemos una aplicación que se puede ejecutar (el método mai
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>1.2.6.RELEASE</version>
+        <version>2.7.18</version>
     </parent>
 
     <properties>
@@ -92,7 +86,6 @@ En este momento ya tenemos una aplicación que se puede ejecutar (el método mai
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
-            <version>1.2.6.RELEASE</version>
         </dependency>
     </dependencies>
 
@@ -248,7 +241,7 @@ MessageListenerAdapter listenerAdapter(Receiver receiver) {
 
 Adaptador para indicar quién recibe el mensaje y qué método lo procesa.
 
-**Nota**: si te aparece el aviso de que el contexto de la aplicación no está configurado para RabbitMqConfig, como se ve en la siguiente imagen:
+**Nota (solo IntelliJ IDEA)**: si usas IntelliJ y te aparece el aviso de que el contexto de la aplicación no está configurado para RabbitMqConfig, como se ve en la siguiente imagen (no debería pasar si generaste el proyecto con Spring Initializr, pero por si acaso):
 
 ![Warning 1](images/rabbitmq_spring_warning_1.png)
 
