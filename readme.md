@@ -326,7 +326,23 @@ Por consola, además de la salida propia de Spring Boot, deberá aparecer:
 [Receiver] ha recibido el mensaje "Hello world!"
 ```
 
-## 7. Conclusiones
+## 7. Para entregar
+
+Entregue el enlace al repositorio con el proyecto y un `INFORME.md` con la salida de la ejecución.
+
+### Criterios de evaluación
+
+* Proyecto.
+	1. El proyecto se generó con Spring Initializr con la dependencia *Spring for RabbitMQ* y compila con `mvn package`.
+* Configuración.
+	1. La conexión a RabbitMQ se define en `application.properties` (o por variables de entorno), no en el código.
+* Funcionalidad.
+	1. Al ejecutar la aplicación, el log muestra que el productor envía el mensaje y que el `Receiver` lo recibe.
+* Extensión.
+	1. Envía un objeto como JSON (por ejemplo, un pedido con varios campos) usando un convertidor de mensajes JSON, y el consumidor lo recibe como objeto.
+	2. Agrega un segundo consumidor y explica en el informe cómo se reparten los mensajes entre los dos.
+
+## 8. Conclusiones
 La integración de RabbitMQ con Spring no tiene ninguna dificultad, pues en un rato hemos sido capaces de crear desde cero un proyecto que se sirve del framework Spring para enviar mensajes a través de RabbitMQ.
 
 ---
