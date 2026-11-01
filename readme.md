@@ -11,34 +11,30 @@ En este tutorial, aprenderás a configurar e integrar RabbitMQ en una aplicació
 
 Necesitas:
 
-- **JDK**: 8 o superior.
-- **Maven**.
+- **JDK 21**.
+- **Maven 3.9** o superior. El proyecto que genera Spring Initializr trae el *Maven Wrapper* (`./mvnw`), así que no es obligatorio instalar Maven.
+- **Docker**, para ejecutar el servidor de RabbitMQ sin instalarlo.
 - Un **IDE** con soporte para proyectos Maven (NetBeans, IntelliJ IDEA, VS Code, Eclipse, etc. — este tutorial no depende de uno en particular).
 
 ## 3. Servidor de RabbitMQ
-Instalamos el servidor de RabbitMQ. Descárgalo desde [aquí](https://www.rabbitmq.com/download.html) o, si utilizas Mac, de [aquí](https://brew.sh/) o a través de Homebrew:
+La forma más simple de tener un servidor de RabbitMQ es ejecutarlo en un contenedor de Docker. La imagen `management` incluye el panel de administración web:
 
 ```sh
-$ brew install rabbitmq
+docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:4.4-management
 ```
 
-Ejecuta el script rabbitmq-server. Si has descargado RabbitMQ manualmente, se encontrará en rabbitmq_server-x.y.z/sbin/. Si lo has instalado con Homebrew en Mac, la ruta será /usr/local/Cellar/rabbitmq/x.y.z/sbin/. Añade esta ruta al PATH para ejecutar rabbitmq-server desde cualquier directorio en la terminal.
+- El puerto **5672** es el que usan las aplicaciones para enviar y recibir mensajes (protocolo AMQP).
+- El puerto **15672** es el del panel de administración: abre [http://localhost:15672](http://localhost:15672) e ingresa con el usuario `guest` y la contraseña `guest`.
+
+Verifica que el servidor esté listo:
 
 ```sh
-$ rabbitmq-server
+docker exec rabbitmq rabbitmq-diagnostics -q ping
 ```
 
-Deberías ver algo similar a esto:
+Debe responder `Ping succeeded`. Cuando termines el tutorial, detén y borra el contenedor con `docker rm -f rabbitmq`.
 
-```shell
-RabbitMQ x.y.z. Copyright (C) 2007-2015 Pivotal Software, Inc.
-##  ##      Licensed under the MPL.  See http://www.rabbitmq.com/
-##  ##
-##########  Logs: /usr/local/var/log/rabbitmq/rabbit@localhost.log
-######  ##        /usr/local/var/log/rabbitmq/rabbit@localhost-sasl.log
-##########
-          Starting broker... completed with 10 plugins.
-```
+Si prefieres instalar RabbitMQ directamente en tu equipo, sigue las instrucciones de [rabbitmq.com](https://www.rabbitmq.com/docs/download) y ejecuta `rabbitmq-server`.
 
 ## 4. Creación del Proyecto con Spring Initializr
 
@@ -48,44 +44,53 @@ Lo primero que vamos a hacer es crear un proyecto Spring Boot. La forma más sim
 2. Configura:
    - **Project**: Maven
    - **Language**: Java
-   - **Spring Boot**: la versión estable más reciente de la línea 2.7.x (o superior)
+   - **Spring Boot**: la versión estable más reciente de la línea 4.1.x
    - **Group**: `tutoriales.rabbitmq.spring`
    - **Artifact**: `tutorial-rabbitmq-spring`
    - **Packaging**: Jar
-   - **Java**: 8 (o la que tengas instalada)
+   - **Java**: 21
 3. En "Dependencies", agrega **Spring for RabbitMQ** (`spring-boot-starter-amqp`).
 4. Haz clic en "Generate" para descargar el `.zip`, descomprímelo, y ábrelo en tu IDE como un proyecto Maven existente (la mayoría de IDEs lo detectan automáticamente al abrir la carpeta o el `pom.xml`).
 5. Espera a que el IDE descargue las dependencias.
 
-En este momento ya tenemos una aplicación que se puede ejecutar (el método `main` usa `SpringApplication.run` para ejecutarla) — aunque todavía no hace nada interesante. La probamos ejecutando la clase `TutorialRabbitmqSpringApplication` (desde el IDE, con clic derecho → Run, o por consola con `mvn spring-boot:run`).
+En este momento ya tenemos una aplicación que se puede ejecutar (el método `main` usa `SpringApplication.run` para ejecutarla) — aunque todavía no hace nada interesante. La probamos ejecutando la clase `TutorialRabbitmqSpringApplication` (desde el IDE, con clic derecho → Run, o por consola con `./mvnw spring-boot:run`, o `mvnw.cmd spring-boot:run` en Windows).
+
+El `pom.xml` generado queda así:
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>tutoriales.rabbitmq.spring</groupId>
-    <artifactId>tutorial-rabbitmq-spring</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
-
-    <name>tutorial-rabbitmq-spring</name>
-    <description>RabbitMQ con Spring</description>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>4.1.1</version>
+        <relativePath/>
     </parent>
 
+    <groupId>tutoriales.rabbitmq.spring</groupId>
+    <artifactId>tutorial-rabbitmq-spring</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>tutorial-rabbitmq-spring</name>
+    <description>RabbitMQ con Spring</description>
+
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-amqp-test</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
@@ -143,7 +148,7 @@ public class RabbitMqConfig {
     public static final String ROUTING_KEY = "routing_key";
 
     private static final String QUEUE_NAME = "queue_name";
-    private static final boolean IS_DURABLE_QUEUE = false;
+    private static final boolean IS_DURABLE_QUEUE = true;
 
     @Bean
     Queue queue() {
@@ -190,7 +195,7 @@ Queue queue() {
 }
 ```
 
-Crea una cola a la que le otorga un nombre y le define su durabilidad.
+Crea una cola a la que le otorga un nombre y le define su durabilidad. Una cola durable sobrevive a un reinicio del servidor. Desde RabbitMQ 4 las colas no durables compartidas están en desuso y el servidor las rechaza con el error ``Feature `transient_nonexcl_queues` is deprecated``, por eso la cola se declara durable.
 
 ```java
 @Bean
@@ -265,7 +270,6 @@ TutorialRabbitmqSpringApplication.java
 package tutoriales.rabbitmq.spring;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -275,15 +279,18 @@ public class TutorialRabbitmqSpringApplication implements CommandLineRunner {
 
     private static final String MESSAGE = "Hello world!";
 
-    @Autowired
-    RabbitTemplate rabbitTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    public TutorialRabbitmqSpringApplication(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
+    }
 
     public static void main(String[] args) {
         SpringApplication.run(TutorialRabbitmqSpringApplication.class, args);
     }
 
     @Override
-    public void run(String... args) throws InterruptedException {
+    public void run(String... args) {
         System.out.println("[Application] Enviando el mensaje \"" + MESSAGE + "\"...");
         rabbitTemplate.convertAndSend(RabbitMqConfig.EXCHANGE_NAME, RabbitMqConfig.ROUTING_KEY, MESSAGE);
     }
@@ -296,7 +303,7 @@ La clase `TutorialRabbitmqSpringApplication` está anotada con `@SpringBootAppli
 - `@EnableAutoConfiguration`: Activa la autoconfiguración del contexto de aplicación de Spring para que busque los beans que se van a necesitar.
 - `@ComponentScan`: Dice a Spring que busque componentes, configuraciones y servicios en el paquete de la clase.
 
-Con la anotación `@Autowired`, incluimos el bean `RabbitTemplate` que nos proporciona Spring. En concreto, este template nos ayuda a enviar y recibir mensajes de una manera realmente sencilla: a través del método `convertAndSend` indicamos que queremos enviar el mensaje `MESSAGE` a las colas que tengan un enlace al exchange `EXCHANGE_NAME` con clave `ROUTING_KEY`.
+Spring entrega el bean `RabbitTemplate` a través del constructor (inyección por constructor), que es la forma recomendada frente a `@Autowired` sobre un atributo. En concreto, este template nos ayuda a enviar y recibir mensajes de una manera realmente sencilla: a través del método `convertAndSend` indicamos que queremos enviar el mensaje `MESSAGE` a las colas que tengan un enlace al exchange `EXCHANGE_NAME` con clave `ROUTING_KEY`.
 
 
 ### 5.1. Configuración de RabbitMQ
@@ -314,10 +321,16 @@ spring.rabbitmq.password=
 spring.rabbitmq.virtual-host=
 spring.rabbitmq.dynamic=
 ```
-Si se omiten, por defecto tomará: localhost, el puerto 5672, el usuario guest, la contraseña guest y el host virtual /.
+Si se omiten, por defecto tomará: localhost, el puerto 5672, el usuario guest, la contraseña guest y el host virtual /. Con el contenedor del paso 3 no hace falta configurar nada.
+
+Cada propiedad también se puede definir con una variable de entorno, por ejemplo `SPRING_RABBITMQ_HOST` o `SPRING_RABBITMQ_PASSWORD`. Así las credenciales de un servidor real no quedan en el código ni en el repositorio.
 
 ## 6. Ejecución
-Lo primero es ejecutar el servidor de RabbitMQ con rabbitmq-server si no lo hemos hecho antes. Entonces ya podremos iniciar la aplicación.
+Con el contenedor de RabbitMQ en marcha (paso 3), inicia la aplicación desde el IDE o por consola:
+
+```sh
+./mvnw spring-boot:run
+```
 
 Por consola, además de la salida propia de Spring Boot, deberá aparecer:
 
@@ -325,6 +338,8 @@ Por consola, además de la salida propia de Spring Boot, deberá aparecer:
 [Application] Enviando el mensaje "Hello world!"...
 [Receiver] ha recibido el mensaje "Hello world!"
 ```
+
+La aplicación sigue en ejecución porque el consumidor queda escuchando la cola; detenla con `Ctrl+C`. En el panel de administración, en la pestaña **Queues and Streams**, verás la cola `queue_name` y en **Exchanges** el exchange `exchange_name`.
 
 ## 7. Para entregar
 
