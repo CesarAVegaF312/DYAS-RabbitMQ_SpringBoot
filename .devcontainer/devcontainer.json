@@ -1,0 +1,20 @@
+{
+  "name": "DYAS - RabbitMQ_SpringBoot",
+  "image": "mcr.microsoft.com/devcontainers/java:21",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "none",
+      "installMaven": true,
+      "mavenVersion": "3.9.11"
+    },
+    "ghcr.io/devcontainers/features/docker-in-docker:4": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "ms-azuretools.vscode-containers"
+      ]
+    }
+  }
+}
